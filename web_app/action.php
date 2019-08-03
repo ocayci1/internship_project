@@ -1,0 +1,303 @@
+<?php
+//action.php
+
+function format_folder_size($size)
+{
+	if($size >= 1073741824)
+	{
+		$size = number_format($size / 1073741824, 2) . 'GB';
+	}
+	elseif($size >= 1048576)
+	{
+		$size = number_format($size / 1048576, 2) . 'MB';
+	}
+	elseif($size >= 1024)
+	{
+		$size = number_format($size / 1024, 2) . 'KB';
+	}
+	elseif($size > 1)
+	{
+		$size = $size . 'bytes';
+	}
+	elseif ($size == 1)
+	{
+		$size = $size . 'byte';
+	}
+	else
+	{
+		$size = '0 bytes';
+	}
+	return $size;
+}
+
+function get_folder_size($folder_name) 
+{
+	$total_size = 0;
+	$file_data = scandir($folder_name);
+	foreach ($file_data as $file) 
+	{
+		if($file === '.' OR $file === '..')
+		{
+			continue;
+		}
+		else
+		{
+			$path = $folder_name . '/' . $file;
+			$total_size += filesize($path);
+		}
+	}
+	return format_folder_size($total_size);
+}
+
+function get_file_size($file_name)
+{
+	$total_size = filesize($file_name);
+	return format_folder_size($total_size);
+}
+
+if(isset($_POST["action"]))
+{
+	if($_POST["action"] == "fetch")
+	{
+		$folder = array_filter(glob('*'), 'is_dir');
+		$files = array_filter(scandir('.'), 'is_file');
+		$output = '
+		<table class="table table-bordered table-striped">
+			<tr>
+				<th>Folder Name</th>
+				<th>Total File</th>
+				<th>Size</th>
+				<th>Update</th>
+				<th>Delete</th>
+				<th>Upload File</th>
+				<th>View Files</th>
+			</tr>
+		';
+
+		$table = '
+		<table class="table table-bordered table-striped">
+			<tr>
+				<th>File Name</th>
+				<th>Size</th>
+				<th>Update</th>
+				<th>Delete</th>
+				<th>View File</th>
+			</tr>
+		';
+
+		if(count($folder) > 0)
+		{
+			foreach($folder as $name)
+			{
+				$output .= '
+					<tr>
+						<td>'.$name.'</td>
+						<td>'.(count(scandir($name)) - 2).'</td>
+						<td>'.get_folder_size($name).'</td>
+						<td><button type="button" name="update" data-name="'.$name.'" class="update btn btn-warning btn-xs">Update</button></td>
+						<td><button type="button" name="delete" data-name="'.$name.'" class="delete btn btn-danger btn-xs">Delete</button></td>
+						<td><button type="button" name="upload" data-name="'.$name.'" class="upload btn btn-info btn-xs">Upload File</button></td>
+						<td><button type="button" name="view_files" data-name="'.$name.'" class="view_files btn btn-default btn-xs">View Files</button></td>
+					</tr>
+				';
+			}
+			foreach ($files as $file) {
+				$data = explode(".", $file);
+				$extension = $data[1];
+				if($extension == "php" || $extension == "html" || $extension == "css")
+				{
+					continue;
+				}
+				else
+				{
+					$table .= '
+					<tr>
+						<td>'.$file.'</td>
+						<td>'.get_file_size($file).'</td>
+						<td><button type="button" name="update" data-name="'.$file.'" class="update btn btn-warning btn-xs">Update</button></td>
+						<td><button type="button" name="delete_file" data-name="'.$file.'" class="delete_file btn btn-danger btn-xs">Delete</button></td>
+						<td><button type="button" name="view_file" data-name="'.$file.'" class="view_file btn btn-default btn-xs">View File</button></td>
+					</tr>
+					';
+				}
+			}
+		}
+		else
+		{
+			$output .= '
+			<tr>
+				<td colspan="6">No Folder Found</td>
+			</tr>
+			';
+			$table .= '
+			<tr>
+				<td colspan="4">No Files Found</td>
+			</tr>
+			';
+		}
+		$output .= '</table>';
+		$table .= '</table>';
+		echo $output;
+		echo $table;
+	}
+
+	if($_POST["action"] == "create")
+	{
+		if(!file_exists($_POST["folder_name"]))
+		{
+			$oldmask = umask(0);
+			mkdir($_POST["folder_name"], 0777, true);
+			umask($oldmask);
+			echo 'Folder Created';
+		}
+		else
+		{
+			echo 'Folder Already Created';
+		}
+	}
+	if($_POST["action"] == "change")
+	{
+		if(!file_exists($_POST["folder_name"]))
+		{
+			rename($_POST["old_name"], $_POST["folder_name"]);
+			echo 'Folder Name Changed';
+		}
+		else
+		{
+			echo 'Folder Already Created';
+		}
+	}
+	if($_POST["action"] == "fetch_files")
+	{
+		$file_data = scandir($_POST["folder_name"]);
+		$output = '
+		<table class="table table-bordered table-striped">
+			<tr>
+				<th>File Name</th>
+				<th>View File</th>
+				<th>Delete</th>
+			</tr>
+		';
+		foreach ($file_data as $file)
+		{
+			if($file === '.' OR $file === '..')
+			{
+				continue;
+			}
+			else
+			{
+				$path = $_POST["folder_name"] . '/' . $file;
+				$output .= '
+				<tr>
+					<td contenteditable="true" data-folder_name="'.$_POST["folder_name"].'" data-file_name="'.$file.'" class="change_file_name">'.$file.'</td>
+					<td><button type="button" name="view" data-name="'.$file.' " class="view btn btn-default btn-xs" id="'.$path.'">View File</button></td>
+					<td><button name="remove_file" class="remove_file btn btn-danger btn-xs" id="'.$path.'">Remove</button></td>
+				</tr>
+				';
+			}
+		}
+		$output .= '</table>';
+		echo $output;
+	}
+
+	if($_POST["action"] == "fetch_file")
+	{
+		$file = $_POST["file_name"];
+		$data = explode(".", $file);
+		$extension = $data[1];
+		if($extension == "jpg" || $extension == "png" || $extension == "gif")
+		{
+			$output = '
+			<img src="'.$file.'" height="200" width="200" />';
+			echo $output;
+		}
+		elseif ($extension == "txt" || $extension == "odt" || $extension == "ods" || $extension == "odp") 
+		{
+			$myfile = fopen($file, "r");
+			$output = fread($myfile, filesize($file));
+			echo $output;
+		}
+		else
+		{
+			echo 'This file format is not supported';
+		}
+	}
+
+	if($_POST["action"] == "display")
+	{
+		$file = $_POST["file_name"];
+		$data = explode(".", $file);
+		$extension = $data[1];
+		if($extension == "jpg" || $extension == "png" || $extension == "gif")
+		{
+			$output = '
+			<img src="'.$file.'" height="200" width="200" />';
+			echo $output;
+		}
+		elseif ($extension == "txt" || $extension == "odt" || $extension == "ods" || $extension == "odp") 
+		{
+			$output = file_get_contents($file);
+			echo $output;
+		}
+		else
+		{
+			echo 'This file format is not supported';
+		}
+	}
+
+	if($_POST["action"] == "remove_file")
+	{
+		if(file_exists($_POST["path"]))
+		{
+			unlink($_POST["path"]);
+			echo 'File Deleted';
+		}
+	}
+
+	if($_POST["action"] == "delete")
+	{
+		$files = scandir($_POST["folder_name"]);
+		foreach ($files as $file) 
+		{
+			if($file === '.' || $file === '..')
+			{
+				continue;
+			}	
+			else
+			{
+				unlink($_POST["folder_name"] . '/' . $file);
+			}
+		}
+		if(rmdir($_POST["folder_name"]))
+		{
+			echo "Folder Deleted";
+		}
+	}
+
+	if($_POST["action"] == "delete_file")
+	{
+		if(unlink($_POST["file_name"]))
+		{
+			echo 'File Deleted';
+		}
+		else
+		{
+			echo 'There is some error';
+		}
+	}
+	if($_POST["action"] == "change_file_name")
+	{
+		$old_name = $_POST["folder_name"] . '/' . $_POST["old_file_name"];
+		$new_name = $_POST["folder_name"] . '/' . $_POST["new_file_name"];
+		if(rename($old_name, $new_name))
+		{
+			echo 'File name changed successfully';
+		}
+		else
+		{
+			echo 'There is an error';
+		}
+	}
+}
+
+?>
