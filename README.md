@@ -1,20 +1,20 @@
 # internship_project
   
-    The project I did during my internship at Bimser Cozum Yazilim Tic. A.S. in Summer 2019.
+The project I did during my internship at Bimser Cozum Yazilim Tic. A.S. in Summer 2019.
 
 ## About
   
-    It is about creating a simple cloud web app using CephFS as the storage location and using HMTL5, Bootstrap, AJAX JQuery and PHP to create the web app which uploads documents to the directory, displays and deletes documents in the directory.
+It is about creating a simple cloud web app using CephFS as the storage location and using HMTL5, Bootstrap, AJAX JQuery and PHP to create the web app which uploads documents to the directory, displays and deletes documents in the directory.
 
-    I will add code snippets to illustrate how AJAX JQuery requests are made and how PHP accomplishes the requested tasks.
+I will add code snippets to illustrate how AJAX JQuery requests are made and how PHP accomplishes the requested tasks.
 
 ## Listing the Contents of a Directory
 
-    This the main skeleton of the application. If you are wonking on any OS with Linux kernel, you need to give PHP permission to format the destination folder so that it can display the folders, documents and files, and also upload or delete documents from that directory.
+This the main skeleton of the application. If you are wonking on any OS with Linux kernel, you need to give PHP permission to format the destination folder so that it can display the folders, documents and files, and also upload or delete documents from that directory.
 
 ### JQuery Request
 
-    Following is the request made from the main HTML page to display the contents of the directory. This is done every time you reload the page, and after every action call you make.
+Following is the request made from the main HTML page to display the contents of the directory. This is done every time you reload the page, and after every action call you make.
 
     ```
     <script>
@@ -39,9 +39,9 @@
     </script>
     ```
 
-    As the document (the HTML page we are displaying in this case) is loaded up and becomes ready, the script will be called to display the contents of the directory we are using as the Cloud Storage Area. Note that, you should be requesting this web application from that directory. Otherwise, PHP and HTML does not have access to a client's documents, therefore you won't be able to have a working cloud directory application.
+As the document (the HTML page we are displaying in this case) is loaded up and becomes ready, the script will be called to display the contents of the directory we are using as the Cloud Storage Area. Note that, you should be requesting this web application from that directory. Otherwise, PHP and HTML does not have access to a client's documents, therefore you won't be able to have a working cloud directory application.
 
-    After this call, the following PHP code snippet iterates through the main cloud directory to output the folders and files stored.
+After this call, the following PHP code snippet iterates through the main cloud directory to output the folders and files stored.
 
     ```
     <?php
